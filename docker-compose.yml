@@ -1,6 +1,11 @@
-version: '3.8'
-
 services:
+  api: 
+    build: .
+    container_name: api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
   db:
     image: postgres:13.22-alpine3.22
     container_name: blog-postgres
@@ -8,8 +13,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    networks:
-      - backend
     volumes:
       - blog-data:/var/lib/postgresql/data
       - ./scripts/postgres:/docker-entrypoint-initdb.d/
@@ -24,8 +27,3 @@ services:
 
 volumes:
   blog-data:
-
-
-networks:
-  backend:
-    driver: bridge

@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE articles (
+CREATE TABLE articles IF NOT EXISTS (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE articles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE comments (
+CREATE TABLE comments IF NOT EXISTS (
     id SERIAL PRIMARY KEY,
     article_id INTEGER REFERENCES articles(id),
     user_id INTEGER REFERENCES users(id),
@@ -26,7 +26,7 @@ CREATE TABLE comments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE article_like (
+CREATE TABLE article_like IF NOT EXISTS (
 	id SERIAL PRIMARY KEY,
 	article_id INTEGER REFERENCES articles(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,

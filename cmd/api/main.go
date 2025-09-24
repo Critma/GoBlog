@@ -36,7 +36,7 @@ func main() {
 	defer logger.Sync()
 
 	if err := godotenv.Load(); err != nil {
-		logger.Fatal("Error loading .env file")
+		logger.Fatal("Error loading .env file", err)
 
 	}
 	config := setConfig()
@@ -67,7 +67,7 @@ func setConfig() *config {
 	return &config{
 		addr: env.GetNonEmptyString("ADDR", ":8080"),
 		db: dbConfig{
-			addr:         env.GetNonEmptyString("DB_ADDR", "postgres://admin:admin@localhost/blog?sslmode=disable"),
+			addr:         env.GetNonEmptyString("DB_ADDR", "postgres://admin:admin@db/blog?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetNonEmptyString("DB_MAX_IDLE_TIME", "15m"),
