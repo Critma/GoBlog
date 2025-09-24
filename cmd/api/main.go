@@ -10,18 +10,35 @@ import (
 	"go.uber.org/zap"
 
 	_ "github.com/lib/pq"
+	_ "github.com/swaggo/http-swagger"
 )
 
 // const version = "1.0.0"
 
+//	@title			GoBlog API
+//	@version		1.0.0
+//	@description	API server for GoBlog web application.
+//	@termsOfService	http://swagger.io/terms/
+
+//	@licence.name	MIT
+//	@licence.url	https://mit-license.org/
+
+//	@BasePath	/api/v1
+
+//	@accept		json
+//	@produce	json
+
+// @securitydefinitions.apiKey	ApiKeyAuth
+// @in							header
+// @name						Authorization
 func main() {
 	logger := zap.Must(zap.NewProduction()).Sugar()
 	defer logger.Sync()
 
 	if err := godotenv.Load(); err != nil {
 		logger.Fatal("Error loading .env file")
-	}
 
+	}
 	config := setConfig()
 
 	db, err := postgres.NewConnection(config.db.addr, config.db.maxOpenConns, config.db.maxIdleConns, config.db.maxIdleTime)

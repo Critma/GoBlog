@@ -14,6 +14,16 @@ type ToRegisterPayload struct {
 	Password string `json:"password" validate:"required,min=7,max=72"`
 }
 
+// @Summary		Register user
+// @Description	Register user
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Param			user	body		ToRegisterPayload	true	"User"
+// @Success		204		{object}	nil
+// @Failure		400		{object}	error
+// @Failure		500		{object}	error
+// @Router			/auth/reg [post]
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var payload ToRegisterPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -50,6 +60,17 @@ type ToLoginPayload struct {
 	Password string `json:"password" validate:"required,min=7,max=72"`
 }
 
+// @Summary		Login user
+// @Description	Login user
+// @Tags			auth
+// @Accept			json
+// @Produce		json
+// @Param			user	body		ToLoginPayload	true	"User"
+// @Success		202		{object}	string
+// @Failure		400		{object}	error
+// @Failure		404		{object}	error
+// @Failure		500		{object}	error
+// @Router			/auth/log [post]
 func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	var payload ToLoginPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -91,7 +112,6 @@ func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 		app.internalServerError(w, r, err)
 		return
 	}
-
 	if err := app.jsonResponse(w, http.StatusAccepted, token); err != nil {
 		app.internalServerError(w, r, err)
 	}

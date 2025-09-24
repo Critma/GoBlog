@@ -19,6 +19,15 @@ type CreateArticlePayload struct {
 	Content string `json:"content" validate:"required,max=100"`
 }
 
+// @Summary		Get latest articles
+// @Description	Get latest articles
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	[]store.LatestArticle
+// @Failure		400	{object}	error
+// @Failure		500	{object}	error
+// @Router			/articles [get]
 func (app *application) getLatestArticlesHandler(w http.ResponseWriter, r *http.Request) {
 	latests, err := app.store.Articles.GetLastTen(r.Context())
 	if err != nil {
@@ -30,6 +39,18 @@ func (app *application) getLatestArticlesHandler(w http.ResponseWriter, r *http.
 	}
 }
 
+// @Summary		Get article by id
+// @Description	Get article by id
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Param			id	path		int	true	"Article ID"
+// @Success		200	{object}	store.Article
+// @Failure		400	{object}	error
+// @Failure		404	{object}	error
+// @Failure		500	{object}	error
+// @Security		ApiKeyAuth
+// @Router			/articles/{id} [get]
 func (app *application) getArticleByID(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
@@ -37,7 +58,7 @@ func (app *application) getArticleByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := app.store.Articles.GetByID(r.Context(), int(id))
+	article, err := app.store.Articles.GetByID(r.Context(), int(id))
 	if err != nil {
 		switch err {
 		case store.ErrNotFound:
@@ -49,11 +70,25 @@ func (app *application) getArticleByID(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := app.jsonResponse(w, http.StatusOK, user); err != nil {
+	if err := app.jsonResponse(w, http.StatusOK, article); err != nil {
 		app.internalServerError(w, r, err)
 	}
 }
 
+// @Summary		Get articles by user id
+// @Description	Get articles by user id
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int	true	"User ID"
+// @Param			offset	query		int	true	"Offset"
+// @Param			limit	query		int	true	"limit"
+// @Success		200		{object}	[]store.Article
+// @Failure		400		{object}	error
+// @Failure		404		{object}	error
+// @Failure		500		{object}	error
+// @Security		ApiKeyAuth
+// @Router			/articles/author/{id} [get]
 func (app *application) getArticlesByUserID(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
@@ -80,6 +115,17 @@ func (app *application) getArticlesByUserID(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// @Summary		Create article
+// @Description	Create article
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Param			article	body		CreateArticlePayload	true	"Article"
+// @Success		201		{object}	store.Article
+// @Failure		400		{object}	error
+// @Failure		500		{object}	error
+// @Security		ApiKeyAuth
+// @Router			/articles [post]
 func (app *application) createArticleHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreateArticlePayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -119,6 +165,18 @@ type UpdateArticlePayload struct {
 	Content string `json:"content" validate:"omitempty,max=1000"`
 }
 
+// @Summary		Update article
+// @Description	Update article
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int						true	"Article ID"
+// @Param			article	body		UpdateArticlePayload	true	"Article"
+// @Success		200		{object}	int
+// @Failure		400		{object}	error
+// @Failure		500		{object}	error
+// @Security		ApiKeyAuth
+// @Router			/articles/{id} [patch]
 func (app *application) updateArticleHandler(w http.ResponseWriter, r *http.Request) {
 	article := getArticleFromCtx(r)
 
@@ -152,6 +210,18 @@ func (app *application) updateArticleHandler(w http.ResponseWriter, r *http.Requ
 	}
 }
 
+// @Summary		Delete article
+// @Description	Delete article
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Param			id	path	int	true	"Article ID"
+// @Success		204
+// @Failure		400	{object}	error
+// @Failure		404	{object}	error
+// @Failure		500	{object}	error
+// @Security		ApiKeyAuth
+// @Router			/articles/{id} [delete]
 func (app *application) deleteArticleHandler(w http.ResponseWriter, r *http.Request) {
 	article := getArticleFromCtx(r)
 
@@ -169,6 +239,20 @@ func (app *application) deleteArticleHandler(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary		Get comments of article by id
+// @Description	Get comments of article by id
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int	true	"Article ID"
+// @Param			offset	query		int	true	"Offset"
+// @Param			limit	query		int	true	"Limit"
+// @Success		200		{object}	[]store.Comment
+// @Failure		400		{object}	error
+// @Failure		404		{object}	error
+// @Failure		500		{object}	error
+// @Security		ApiKeyAuth
+// @Router			/articles/{id}/comments [get]
 func (app *application) getArticleCommentsHandler(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -193,6 +277,22 @@ func (app *application) getArticleCommentsHandler(w http.ResponseWriter, r *http
 	}
 }
 
+type CommentOnlyText struct {
+	Text string `json:"text"`
+}
+
+// @Summary		Create comment
+// @Description	Create comment
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int				true	"Article ID"
+// @Param			comment	body		CommentOnlyText	true	"Comment"
+// @Success		201		{object}	int
+// @Failure		400		{object}	error
+// @Failure		500		{object}	error
+// @Security		ApiKeyAuth
+// @Router			/articles/{id}/comments [post]
 func (app *application) createArticleCommentHandler(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -222,6 +322,17 @@ func (app *application) createArticleCommentHandler(w http.ResponseWriter, r *ht
 	app.jsonResponse(w, http.StatusCreated, commID)
 }
 
+// @Summary		set like on article
+// @Description	set like on article
+// @Tags			articles
+// @Accept			json
+// @Produce		json
+// @Param			id	path	int	true	"Article ID"
+// @Success		201
+// @Failure		400	{object}	error
+// @Failure		500	{object}	error
+// @Security		ApiKeyAuth
+// @Router			/articles/{id}/like [post]
 func (app *application) createLikeOnArticle(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idParam, 10, 64)

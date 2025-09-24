@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
+	_ "github.com/critma/goblog/docs"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func (app *application) mount() http.Handler {
@@ -19,6 +22,8 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/api/v1", func(r chi.Router) {
+		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
+		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/reg", app.registerUserHandler)
@@ -26,34 +31,34 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/users", func(r chi.Router) {
-			// auth token
 			r.Route("/{id}", func(r chi.Router) {
 				r.Get("/", app.getUserByIDHandler)
 			})
 		})
 
 		r.Route("/articles", func(r chi.Router) {
-			r.Use(app.AuthTokenMiddleware)
-
 			r.Get("/", app.getLatestArticlesHandler)
-			r.Post("/", app.createArticleHandler)
-			r.Route("/{id}", func(r chi.Router) {
-				r.Use(app.articleContextMiddleware)
-				r.Get("/", app.getArticleByID)
+			r.Group(func(r chi.Router) { // with middleware
+				r.Use(app.AuthTokenMiddleware)
+				r.Post("/", app.createArticleHandler)
+				r.Route("/{id}", func(r chi.Router) {
+					r.Use(app.articleContextMiddleware)
+					r.Get("/", app.getArticleByID)
 
-				r.Route("/comments", func(r chi.Router) {
-					r.Get("/", app.getArticleCommentsHandler)
-					r.Post("/", app.createArticleCommentHandler)
-				})
-				r.Post("/like", app.createLikeOnArticle)
+					r.Route("/comments", func(r chi.Router) {
+						r.Get("/", app.getArticleCommentsHandler)
+						r.Post("/", app.createArticleCommentHandler)
+					})
+					r.Post("/like", app.createLikeOnArticle)
 
-				r.Group(func(r chi.Router) {
-					r.Use(app.CheckArticleOwnershipMiddleware)
-					r.Delete("/", app.deleteArticleHandler)
-					r.Patch("/", app.updateArticleHandler)
+					r.Group(func(r chi.Router) {
+						r.Use(app.CheckArticleOwnershipMiddleware)
+						r.Delete("/", app.deleteArticleHandler)
+						r.Patch("/", app.updateArticleHandler)
+					})
 				})
+				r.Get("/author/{id}", app.getArticlesByUserID)
 			})
-			r.Get("/author/{id}", app.getArticlesByUserID)
 		})
 	})
 

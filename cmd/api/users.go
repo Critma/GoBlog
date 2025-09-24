@@ -12,6 +12,16 @@ type userKey string
 
 const userCtx userKey = "user"
 
+// @description	Get user by ID
+// @summary		Get user by ID
+// @Tags			users
+// @Accept			json
+// @Produce		json
+// @Param			id	path		int	true	"User ID"
+// @Success		200	{object}	store.User
+// @Failure		400	{object}	error
+// @Failure		404	{object}	error
+// @Router			/users/{id} [get]
 func (app *application) getUserByIDHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
